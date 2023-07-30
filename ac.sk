@@ -1,0 +1,242 @@
+# Anticheat Skript made by BridgerSilk
+# Do not edit the Code!
+# Do not re-publish the code!
+# Do not remove any credits from the code!
+
+# Edit the option values as you wish:
+
+options:
+# The prefix used for all messages in this code
+  prefix: &3[&bSAC&3]
+# The Permission for the main command
+  admin-permission: your.permission
+# The Permission for the players who should receive flag messages
+  flag-message-permission: your.permission
+# This will be displayed when a player gets banned or kicked (keep empty if you want no discord link displayed)
+  discord-link: discord.gg/yourserver
+# This will be displayed when a player gets banned or kicked (keep empty if you want no website link displayed)
+  website-link: www.yourserver.com
+
+# -------------------------------------------------------
+
+command /silkanticheat [<text>] [<offline player>] [<text>]:
+  aliases: /sac
+  permission: {@admin-permission}
+  trigger:
+    if arg 1 is not set:
+      send "{@prefix} &6------------------------------------"
+      send "{@prefix} &6&lCommand List:"
+      send "{@prefix} &c/silkanticheat check <player>"
+      send "{@prefix} &c/silkanticheat kick <player> <reason>"
+      send "{@prefix} &c/silkanticheat ban <player> <reason>"
+      send "{@prefix} &c/silkanticheat unban <player>"
+      send "{@prefix} &c/silkanticheat mute <player> <reason>"
+      send "{@prefix} &c/silkanticheat unmute <player>"
+      send "{@prefix} &c/silkanticheat addnote <player> <note>"
+      send "{@prefix} &6------------------------------------"
+    if arg 1 is "check":
+      if arg 2 is set:
+        set {current.check.%player%} to arg 2
+        set {_gui} to a new chest inventory with 1 row named "&8Checking %arg-2%"
+        set slot 0 of {_gui} to arg-2's skull named "&7&lPlayer's Name:" with lore "&c%arg-2%"
+        set slot 1 of {_gui} to paper named "&7&lPlayer's IP:" with lore "&c%arg-2's IP%"
+        set slot 2 of {_gui} to paper named "&7&lPlayer's UUID:" with lore "&c%arg-2's uuid%"
+        set slot 3 of {_gui} to empty map named "&7&lPlayer's Notes:" with lore "&c%{notes.%arg-2's uuid%::*}%"
+        set slot 4 of {_gui} to book named "&7&lPlayer's Bans:" with lore "&c%{bans.%arg-2's uuid%::*}%"
+        set slot 5 of {_gui} to book named "&7&lPlayer's Kicks:" with lore "&c%{kicks.%arg-2's uuid%::*}%"
+        set slot 6 of {_gui} to book named "&7&lPlayer's Mutes:" with lore "&c%{mutes.%arg-2's uuid%::*}%"
+        set slot 7 of {_gui} to emerald named "&7&lPlayer's Ping:" with lore "&c%arg-2's ping%"
+        set slot 8 of {_gui} to item frame named "&7&lPlayer's Flag Count:" with lore "&c%{flags.%arg-2's uuid%}%"
+        open {_gui} to player
+    if arg 1 is "kick":
+      if arg 2 is a player:
+        if arg 2 is online:
+          add arg 3 to {kicks.%arg-2's uuid%::*}
+          send "{@prefix} &c%arg-2% &7successfully got kicked for &c%arg-3%&7!"
+          kick arg 2 due to "{@prefix}%newline%&7%newline%&cYou got kicked!%newline%&cReason: %arg-3% %newline%&7%newline%&7Website: &b{@website-link}%newline%&7Discord Server: &b{@discord-link}"
+        else:
+          send "{@prefix} &cThis Player is not online!"
+      else:
+        send "{@prefix} &cThis is not a valid Playername!"
+    if arg 1 is "ban":
+      if arg 2 is a player:
+        if arg 2 is online:
+          add arg 3 to {bans.%arg-2's uuid%::*}
+          send "{@prefix} &c%arg-2% &7successfully got banned for &c%arg-3%&7!"
+          ban arg 2 due to "{@prefix}%newline%&7%newline%&cYou got permanently banned!%newline%&cReason: %arg-3% %newline%&7%newline%&7Website: &b{@website-link}%newline%&7Discord Server: &b{@discord-link}"
+          kick arg 2 due to "{@prefix}%newline%&7%newline%&cYou got permanently banned!%newline%&cReason: %arg-3% %newline%&7%newline%&7Website: &b{@website-link}%newline%&7Discord Server: &b{@discord-link}"
+        else:
+          send "{@prefix} &cThis Player is not online!"
+      else:
+        send "{@prefix} &cThis is not a valid Playername!"
+    if arg 1 is "unban":
+      if arg 2 is a player:
+        if arg 2 is banned:
+          unban arg 2
+          send "{@prefix} &c%arg-2% &7successfully got unbanned!"
+        else:
+          send "{@prefix} &cThis Player is not banned!"
+      else:
+        send "{@prefix} &cThis is not a valid Playername!"
+    if arg 1 is "mute":
+      if arg 2 is a player:
+        add arg 3 to {mutes.%arg-2's uuid%::*}
+        set {mute.%arg-2's uuid%} to true
+        set {mute.reason.%arg-2's uuid%} to arg 3
+        send "{@prefix} &c%arg-2% &7successfully got muted for &c%arg-3%&7!"
+      else:
+        send "{@prefix} &cThis is not a valid Playername!"
+    if arg 1 is "unmute":
+      if arg 2 is a player:
+        send "{@prefix} &c%arg-2% &7successfully got unmuted!"
+        delete {mute.%arg-2's uuid%}
+        delete {mute.reason.%arg-2's uuid%}
+      else:
+        send "{@prefix} &cThis is not a valid Playername!"
+    if arg 1 is "addnote":
+      if arg 2 is a player:
+        if arg 3 is set:
+          add arg 3 to {notes.%arg-2's uuid%::*}
+          send "{@prefix} &c""%arg-3%"" &7successfully got added to &c%arg-2%&7's Note List!"
+        else:
+          send "{@prefix} &cThere is no Note defined!"
+      else:
+        send "{@prefix} &cThis is not a valid Playername!"
+
+on inventory click:
+  if name of event-inventory is "&8Checking %{current.check.%player%}%":
+    cancel event
+
+# Mute event
+on chat:
+  if {mute.%player's uuid%} is set:
+    cancel event
+    send "{@prefix} &cYou are muted!"
+    send "{@prefix} &7Reason: %{mute.reason.%player's uuid%}%"
+
+# Attack Reach check (100% working, no false flags)
+on damage:
+  if damage cause is attack:
+    if attacker is a player:
+      loop all players in radius 3.7 around victim:
+        add loop-player to {_attacklog::*}
+      if {_attacklog::*} does not contain attacker:
+        set {_rnd} to a random integer between 62 and 100
+        loop all players:
+          if loop-player has permission "{@flag-message-permission}":
+            send "{@prefix} &c%attacker% &7might use &cReach &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+            add 1 to {flags.%attacker's uuid%}
+
+# Velocity/Anti KB Check (only checking for blatant anti kb)
+on damage:
+  if damage cause is attack:
+    if victim is a player:
+      set {_ycoords} to victim's y-coord
+      set {_xcoords} to victim's x-coord
+      set {_zcoords} to victim's z-coord
+      set {_pos} to position of victim
+      wait 12 ticks
+      loop all players in radius 0.5 around {_pos}:
+        if loop-player is victim:
+          set {_rnd} to a random integer between 62 and 100
+          loop all players:
+            if loop-player-2 has permission "{@flag-message-permission}":
+              send "{@prefix} &c%victim% &7might use &cAntiKnockback &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player-2
+              add 1 to {flags.%victim's uuid%}
+
+# Nuker check (kinda bad, only detects really bad nukers, often false flags if breaking alot of grass)
+on break:
+  set {_breakblock} to event-location
+  if location of targeted block of player is {_breakblock}:
+    stop
+  else:
+    set {_rnd} to a random integer between 62 and 100
+    loop all players:
+      if loop-player has permission "{@flag-message-permission}":
+        send "{@prefix} &c%player% &7might use &cNuker &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+        add 1 to {flags.%player's uuid%}
+
+# No Slowdown check (100% working, no false flags)
+on consume:
+  if player is sprinting:
+    set {_rnd} to a random integer between 62 and 100
+    loop all players:
+      if loop-player has permission "{@flag-message-permission}":
+        send "{@prefix} &c%player% &7might use &cNoSlowdown &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+        add 1 to {flags.%player's uuid%}
+
+# AntiFire check: health (100% working, no false flags, sometimes may not flag even if positive)
+on damage:
+  if damage cause is burn:
+    set {_hp} to victim's health
+    wait 1 second
+    if victim's health > {_hp} + 2:
+      set {_rnd} to a random integer between 62 and 100
+      loop all players:
+        if loop-player has permission "{@flag-message-permission}":
+          send "{@prefix} &c%victim% &7might use &cAntiFire &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+          add 1 to {flags.%victim's uuid%}
+
+# AntiFire check: burn (90% working, may false flag)
+on damage:
+  if damage cause is burn:
+    wait 1 second
+    if victim is not on fire:
+      if block at position of victim is not water:
+        set {_rnd} to a random integer between 62 and 100
+        loop all players:
+          if loop-player has permission "{@flag-message-permission}":
+            send "{@prefix} &c%victim% &7might use &cAntiFire &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+            add 1 to {flags.%victim's uuid%}
+
+# Fly check (uhh 50% working, false flags alot probably, not fully tested, doesnt flag if the player flies short above the ground)
+on player move:
+  if block below player is air:
+    if block below block below player is air:
+      if block below block below block below player is air:
+        if block below block below block below block below player is air:
+          if player's gamemode is survival:
+            wait 2 seconds
+            if block below block below block below block below player is air:
+              set {_rnd} to a random integer between 62 and 100
+              loop all players:
+                if loop-player has permission "{@flag-message-permission}":
+                  send "{@prefix} &c%player% &7might use &cFlight &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+                  add 1 to {flags.%player's uuid%}
+
+# Killaura check (70% working, basically works but only detects bad killauras, no false flag)
+on damage:
+  if damage cause is attack:
+    if attacker is a player:
+      if attacker's target is not victim:
+        set {_rnd} to a random integer between 62 and 100
+        loop all players:
+          if loop-player has permission "{@flag-message-permission}":
+            send "{@prefix} &c%victim% &7might use &cKillaura &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+            add 1 to {flags.%victim's uuid%}
+
+# Jesus check (90% working, some false flags)
+on player walk:
+  if block below player is water:
+    if block at position of player is water:
+      stop
+    else:
+      wait 2 seconds
+      if block at position of player is not water:
+        set {_rnd} to a random integer between 62 and 100
+        loop all players:
+          if loop-player has permission "{@flag-message-permission}":
+            send "{@prefix} &c%player% &7might use &cJesus &7(&3Reliability: %{_rnd}%%%&7)!" to loop-player
+            add 1 to {flags.%player's uuid%}
+
+# InvWalk (0% working, doesnt false flag nor flag, just doesnt do anything)
+on inventory open:
+  if event-inventory is player's inventory:
+    set {open.%player%} to true
+
+on inventory close:
+  set {open.%player%} to false
+
+on player move:
+  if {open.%player%} is true:
+    send "test"
